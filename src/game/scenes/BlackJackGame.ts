@@ -31,6 +31,11 @@ export class BlackJackGame extends Scene {
         this.camera = this.cameras.main
         this.camera.setBackgroundColor(0x2d5016)
 
+        const WIDTH = this.camera.width
+        const HEIGHT = this.camera.height
+
+        console.log({ WIDTH, HEIGHT })
+
         // Текстовые элементы будут созданы в renderHand
         this.dealerText = null as any
         this.dealerValueText = null as any
@@ -38,8 +43,8 @@ export class BlackJackGame extends Scene {
         this.playerValueText = null as any
 
         this.resultText = this.add
-            .text(600, 420, '', {
-                fontSize: '32px',
+            .text(WIDTH / 2, HEIGHT - 200, '', {
+                fontSize: WIDTH > 600 ? '32px' : '24px',
                 color: '#00ff00',
                 fontStyle: 'bold',
             })
@@ -47,33 +52,33 @@ export class BlackJackGame extends Scene {
 
         // Кнопки
         this.hitButton = this.add
-            .text(500, 500, 'Hit', {
+            .text(100, HEIGHT - 50, 'Hit', {
                 fontSize: '24px',
                 color: '#ffffff',
                 backgroundColor: '#0066cc',
                 padding: { x: 20, y: 10 },
             })
-            .setOrigin(0.5)
+            .setOrigin(0, 1)
             .setInteractive({ useHandCursor: true })
 
         this.standButton = this.add
-            .text(700, 500, 'Stand', {
+            .text(WIDTH - 100, HEIGHT - 50, 'Stand', {
                 fontSize: '24px',
                 color: '#ffffff',
                 backgroundColor: '#cc6600',
                 padding: { x: 20, y: 10 },
             })
-            .setOrigin(0.5)
+            .setOrigin(1, 1)
             .setInteractive({ useHandCursor: true })
 
         this.newGameButton = this.add
-            .text(600, 560, 'New Game', {
+            .text(WIDTH / 2, HEIGHT - 130, 'New Game', {
                 fontSize: '20px',
                 color: '#ffffff',
                 backgroundColor: '#009900',
                 padding: { x: 15, y: 8 },
             })
-            .setOrigin(0.5)
+            .setOrigin(0.5, 1)
             .setInteractive({ useHandCursor: true })
             .setVisible(false)
 
@@ -214,12 +219,12 @@ export class BlackJackGame extends Scene {
         yPosition: number,
         isDealer: boolean,
     ) {
-        const CARD_SPRITE_WIDTH = 61
-        const CARD_SPRITE_HEIGHT = 81
+        const CARD_SPRITE_WIDTH = 100
+        const CARD_SPRITE_HEIGHT = 150
         const CARD_SCALE = 0.8
-        const CARD_SPACING = 70
-        const NAME_START_X = 50
-        const CARDS_START_X = 300
+        const CARD_SPACING = 50
+        const NAME_START_X = 30
+        const CARDS_START_X = 180
 
         // Создаем текстовые элементы для названия и очков
         let nameText: Phaser.GameObjects.Text
@@ -227,7 +232,7 @@ export class BlackJackGame extends Scene {
 
         if (isDealer) {
             nameText = this.add
-                .text(NAME_START_X, yPosition, name, {
+                .text(NAME_START_X, yPosition - 15, name, {
                     fontSize: '24px',
                     color: '#ffffff',
                 })
@@ -235,7 +240,7 @@ export class BlackJackGame extends Scene {
 
             const dealerValue = this.logic.getDealerValue()
             valueText = this.add
-                .text(NAME_START_X + 100, yPosition, `Очки: ${dealerValue}`, {
+                .text(NAME_START_X, yPosition + 15, `Очки: ${dealerValue}`, {
                     fontSize: '20px',
                     color: '#ffff00',
                 })
@@ -245,7 +250,7 @@ export class BlackJackGame extends Scene {
             this.dealerValueText = valueText
         } else {
             nameText = this.add
-                .text(NAME_START_X, yPosition, name, {
+                .text(NAME_START_X, yPosition - 15, name, {
                     fontSize: '24px',
                     color: '#ffffff',
                 })
@@ -253,7 +258,7 @@ export class BlackJackGame extends Scene {
 
             const playerValue = this.logic.getPlayerValue()
             valueText = this.add
-                .text(NAME_START_X + 100, yPosition, `Очки: ${playerValue}`, {
+                .text(NAME_START_X, yPosition + 15, `Очки: ${playerValue}`, {
                     fontSize: '20px',
                     color: '#ffff00',
                 })
@@ -270,13 +275,15 @@ export class BlackJackGame extends Scene {
 
             if (card.side === 'back') {
                 // Для закрытой карты создаем прямоугольник-заглушку
-                const rect = this.add.rectangle(
-                    x,
-                    y,
-                    CARD_SPRITE_WIDTH * CARD_SCALE,
-                    CARD_SPRITE_HEIGHT * CARD_SCALE,
-                    0x1a1a1a,
-                )
+                const rect = this.add
+                    .rectangle(
+                        x,
+                        y,
+                        CARD_SPRITE_WIDTH - 2,
+                        CARD_SPRITE_HEIGHT - 2,
+                        0x1a1a1a,
+                    )
+                    .setScale(CARD_SCALE)
                 rect.setStrokeStyle(2, 0xffffff)
                 // Добавляем текст "?"
                 const backText = this.add

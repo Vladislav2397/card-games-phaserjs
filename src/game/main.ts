@@ -10,8 +10,8 @@ import { BlackJackGame } from './scenes/BlackJackGame'
 //  https://docs.phaser.io/api-documentation/typedef/types-core#gameconfig
 const config: Phaser.Types.Core.GameConfig = {
     type: AUTO,
-    width: 1200,
-    height: 768,
+    width: Math.min(window.innerWidth, 1200),
+    height: Math.min(window.innerHeight, 768),
     parent: 'game-container',
     backgroundColor: '#028af8',
     scene: [Boot, Preloader, MainMenu, BlackJackGame, MainGame, GameOver],
