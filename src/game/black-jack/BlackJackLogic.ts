@@ -1,7 +1,13 @@
-import { Desk } from "./Desk"
-import { Hand } from "./Hand"
+import { Desk } from './Desk'
+import { Hand } from './Hand'
 
-export type GameState = 'playing' | 'playerWon' | 'dealerWon' | 'tie' | 'playerBust' | 'dealerBust'
+export type GameState =
+    | 'playing'
+    | 'playerWon'
+    | 'dealerWon'
+    | 'tie'
+    | 'playerBust'
+    | 'dealerBust'
 
 export class BlackJackLogic {
     private desk: Desk
@@ -37,7 +43,9 @@ export class BlackJackLogic {
         // Проверяем блэкджек при старте
         // Временно показываем карты дилера для проверки
         const dealerCardsForCheck = this.dealerHand.getCards()
-        const firstCardWasHidden = dealerCardsForCheck.length > 0 && dealerCardsForCheck[0].side === 'back'
+        const firstCardWasHidden =
+            dealerCardsForCheck.length > 0 &&
+            dealerCardsForCheck[0].side === 'back'
 
         if (firstCardWasHidden) {
             dealerCardsForCheck[0].turn('front')
@@ -68,6 +76,14 @@ export class BlackJackLogic {
 
     public displayDealerHand() {
         return this.dealerHand.displayCards()
+    }
+
+    public getPlayerCards() {
+        return this.playerHand.getCards()
+    }
+
+    public getDealerCards() {
+        return this.dealerHand.getCards()
     }
 
     public displayTurn() {
@@ -133,7 +149,10 @@ export class BlackJackLogic {
 
     private playDealerTurn() {
         // Дилер берет карты до 17 или больше
-        while (this.dealerHand.getValue() < 17 && this.gameState === 'playing') {
+        while (
+            this.dealerHand.getValue() < 17 &&
+            this.gameState === 'playing'
+        ) {
             this.dealerHand.add(this.desk.pick('top', 1))
 
             if (this.isBust(this.dealerHand)) {
