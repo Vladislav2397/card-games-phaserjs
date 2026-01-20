@@ -1,5 +1,6 @@
 import { Scene } from 'phaser'
 import { BlackJackLogic } from '../black-jack/BlackJackLogic'
+import { Card } from '../black-jack/Card'
 
 export class BlackJackGame extends Scene {
     camera: Phaser.Cameras.Scene2D.Camera
@@ -17,6 +18,7 @@ export class BlackJackGame extends Scene {
     playerCardSprites: Phaser.GameObjects.Sprite[] = []
     dealerCardSprites: Phaser.GameObjects.Sprite[] = []
     dealerCardBackElements: Phaser.GameObjects.GameObject[] = []
+    playerCardBackElements: Phaser.GameObjects.GameObject[] = []
 
     constructor() {
         super('BlackJackGame')
@@ -29,34 +31,11 @@ export class BlackJackGame extends Scene {
         this.camera = this.cameras.main
         this.camera.setBackgroundColor(0x2d5016)
 
-        // Создаем текстовые элементы
-        this.dealerText = this.add
-            .text(600, 100, 'Дилер', {
-                fontSize: '24px',
-                color: '#ffffff',
-            })
-            .setOrigin(0.5)
-
-        this.dealerValueText = this.add
-            .text(600, 140, '', {
-                fontSize: '20px',
-                color: '#ffff00',
-            })
-            .setOrigin(0.5)
-
-        this.playerText = this.add
-            .text(600, 280, 'Игрок', {
-                fontSize: '24px',
-                color: '#ffffff',
-            })
-            .setOrigin(0.5)
-
-        this.playerValueText = this.add
-            .text(600, 320, '', {
-                fontSize: '20px',
-                color: '#ffff00',
-            })
-            .setOrigin(0.5)
+        // Текстовые элементы будут созданы в renderHand
+        this.dealerText = null as any
+        this.dealerValueText = null as any
+        this.playerText = null as any
+        this.playerValueText = null as any
 
         this.resultText = this.add
             .text(600, 420, '', {
@@ -102,9 +81,9 @@ export class BlackJackGame extends Scene {
         this.hitButton.on('pointerdown', () => {
             if (!this.logic.isGameOver()) {
                 this.logic.hit()
+                this.updateCardSprites()
                 this.updateTexts()
                 this.updateButtons()
-                this.updateCardSprites()
             }
         })
 
@@ -121,9 +100,9 @@ export class BlackJackGame extends Scene {
         this.standButton.on('pointerdown', () => {
             if (!this.logic.isGameOver()) {
                 this.logic.stand()
+                this.updateCardSprites()
                 this.updateTexts()
                 this.updateButtons()
-                this.updateCardSprites()
             }
         })
 
@@ -150,33 +129,37 @@ export class BlackJackGame extends Scene {
         })
 
         // Первоначальное обновление
+        this.updateCardSprites()
         this.updateTexts()
         this.updateButtons()
-        this.updateCardSprites()
     }
 
     private updateTexts() {
         const dealerValue = this.logic.getDealerValue()
         const playerValue = this.logic.getPlayerValue()
 
-        this.dealerValueText.text = `Очки: ${dealerValue}`
-        this.playerValueText.text = `Очки: ${playerValue}`
+        if (this.dealerValueText) {
+            this.dealerValueText.text = `Очки: ${dealerValue}`
+            // Подсветка перебора
+            if (dealerValue > 21) {
+                this.dealerValueText.setColor('#ff0000')
+            } else {
+                this.dealerValueText.setColor('#ffff00')
+            }
+        }
+
+        if (this.playerValueText) {
+            this.playerValueText.text = `Очки: ${playerValue}`
+            // Подсветка перебора
+            if (playerValue > 21) {
+                this.playerValueText.setColor('#ff0000')
+            } else {
+                this.playerValueText.setColor('#ffff00')
+            }
+        }
 
         const resultMessage = this.logic.getResultMessage()
         this.resultText.text = resultMessage
-
-        // Подсветка перебора
-        if (dealerValue > 21) {
-            this.dealerValueText.setColor('#ff0000')
-        } else {
-            this.dealerValueText.setColor('#ffff00')
-        }
-
-        if (playerValue > 21) {
-            this.playerValueText.setColor('#ff0000')
-        } else {
-            this.playerValueText.setColor('#ffff00')
-        }
     }
 
     private updateButtons() {
@@ -199,34 +182,91 @@ export class BlackJackGame extends Scene {
 
     private startNewGame() {
         this.logic.startGame()
+        this.updateCardSprites()
         this.updateTexts()
         this.updateButtons()
-        this.updateCardSprites()
     }
 
     private updateCardSprites() {
-        // Удаляем старые спрайты
+        // Удаляем старые спрайты и тексты
         this.playerCardSprites.forEach(sprite => sprite.destroy())
         this.dealerCardSprites.forEach(sprite => sprite.destroy())
         this.dealerCardBackElements.forEach(element => element.destroy())
+        this.playerCardBackElements.forEach(element => element.destroy())
+        if (this.dealerText) this.dealerText.destroy()
+        if (this.dealerValueText) this.dealerValueText.destroy()
+        if (this.playerText) this.playerText.destroy()
+        if (this.playerValueText) this.playerValueText.destroy()
+
         this.playerCardSprites = []
         this.dealerCardSprites = []
         this.dealerCardBackElements = []
+        this.playerCardBackElements = []
 
+        // Отображаем руки
+        this.renderHand('Дилер', this.logic.getDealerCards(), 150, true)
+        this.renderHand('Игрок', this.logic.getPlayerCards(), 280, false)
+    }
+
+    private renderHand(
+        name: string,
+        cards: Card[],
+        yPosition: number,
+        isDealer: boolean,
+    ) {
         const CARD_SPRITE_WIDTH = 61
         const CARD_SPRITE_HEIGHT = 81
         const CARD_SCALE = 0.8
         const CARD_SPACING = 70
-        const DEALER_START_X = 200
-        const DEALER_START_Y = 180
-        const PLAYER_START_X = 200
-        const PLAYER_START_Y = 360
+        const NAME_START_X = 50
+        const CARDS_START_X = 300
 
-        // Отображаем карты дилера
-        const dealerCards = this.logic.getDealerCards()
-        dealerCards.forEach((card, index) => {
-            const x = DEALER_START_X + index * CARD_SPACING
-            const y = DEALER_START_Y
+        // Создаем текстовые элементы для названия и очков
+        let nameText: Phaser.GameObjects.Text
+        let valueText: Phaser.GameObjects.Text
+
+        if (isDealer) {
+            nameText = this.add
+                .text(NAME_START_X, yPosition, name, {
+                    fontSize: '24px',
+                    color: '#ffffff',
+                })
+                .setOrigin(0, 0.5)
+
+            const dealerValue = this.logic.getDealerValue()
+            valueText = this.add
+                .text(NAME_START_X + 100, yPosition, `Очки: ${dealerValue}`, {
+                    fontSize: '20px',
+                    color: '#ffff00',
+                })
+                .setOrigin(0, 0.5)
+
+            this.dealerText = nameText
+            this.dealerValueText = valueText
+        } else {
+            nameText = this.add
+                .text(NAME_START_X, yPosition, name, {
+                    fontSize: '24px',
+                    color: '#ffffff',
+                })
+                .setOrigin(0, 0.5)
+
+            const playerValue = this.logic.getPlayerValue()
+            valueText = this.add
+                .text(NAME_START_X + 100, yPosition, `Очки: ${playerValue}`, {
+                    fontSize: '20px',
+                    color: '#ffff00',
+                })
+                .setOrigin(0, 0.5)
+
+            this.playerText = nameText
+            this.playerValueText = valueText
+        }
+
+        // Отображаем карты
+        cards.forEach((card, index) => {
+            const x = CARDS_START_X + index * CARD_SPACING
+            const y = yPosition
 
             if (card.side === 'back') {
                 // Для закрытой карты создаем прямоугольник-заглушку
@@ -247,25 +287,23 @@ export class BlackJackGame extends Scene {
                     })
                     .setOrigin(0.5)
 
-                this.dealerCardBackElements.push(rect, backText)
+                if (isDealer) {
+                    this.dealerCardBackElements.push(rect, backText)
+                } else {
+                    // Игрок не должен иметь закрытых карт, но на всякий случай
+                    this.playerCardBackElements.push(rect, backText)
+                }
             } else {
                 const frameName = `${card.rank}${card.unit}`
                 const sprite = this.add.sprite(x, y, 'cards', frameName)
                 sprite.setScale(CARD_SCALE)
-                this.dealerCardSprites.push(sprite)
+
+                if (isDealer) {
+                    this.dealerCardSprites.push(sprite)
+                } else {
+                    this.playerCardSprites.push(sprite)
+                }
             }
-        })
-
-        // Отображаем карты игрока
-        const playerCards = this.logic.getPlayerCards()
-        playerCards.forEach((card, index) => {
-            const x = PLAYER_START_X + index * CARD_SPACING
-            const y = PLAYER_START_Y
-
-            const frameName = `${card.rank}${card.unit}`
-            const sprite = this.add.sprite(x, y, 'cards', frameName)
-            sprite.setScale(CARD_SCALE)
-            this.playerCardSprites.push(sprite)
         })
     }
 }
