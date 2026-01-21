@@ -1,4 +1,21 @@
-import { Card, Rank as CardRank, Unit as CardUnit } from "./Card"
+import { Card, Rank as CardRank, Unit as CardUnit } from './Card'
+
+const ranks: CardRank[] = [
+    '2',
+    '3',
+    '4',
+    '5',
+    '6',
+    '7',
+    '8',
+    '9',
+    '10',
+    'J',
+    'Q',
+    'K',
+    'A',
+]
+const units: CardUnit[] = ['♠', '♥', '♦', '♣']
 
 export class Desk {
     private cards: Card[] = []
@@ -12,9 +29,6 @@ export class Desk {
     }
 
     private createCards() {
-        const ranks: CardRank[] = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
-        const units: CardUnit[] = ['♠', '♥', '♦', '♣']
-
         const cards: Card[] = []
 
         for (const rank of ranks) {
